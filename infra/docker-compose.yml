@@ -1,0 +1,40 @@
+version: "2.1"
+services:
+  jobmanager:
+    image: ${FLINK_DOCKER_IMAGE_NAME:-flink}
+    expose:
+      - "6123"
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+
+  taskmanager:
+    image: ${FLINK_DOCKER_IMAGE_NAME:-flink}
+    expose:
+      - "6121"
+      - "6122"
+    depends_on:
+      - jobmanager
+    command: taskmanager
+    links:
+      - "jobmanager:jobmanager"
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=jobmanager
+
+  kafka:
+    build:
+     context: ./kafka
+    expose:
+     - "2181"
+     - "9092"
+    ports:
+     - "2181:2181"
+     - "9092:9092"
+    links:
+     - jobmanager
+     - taskmanager
+    environment:
+     - ADVERTISED_HOST=127.0.0.1
+     - ADVERTISED_PORT=9092
